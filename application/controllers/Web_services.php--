@@ -1,0 +1,391 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Web_services extends CI_Controller {
+
+    function __construct() {
+        parent::__construct();
+        $this->load->config('tank_auth', TRUE);
+        $this->load->helper('url');
+        $this->load->model('flex_model');
+        $this->load->model('home_model');
+        $this->load->library('tank_auth');
+        $this->lang->load('tank_auth');
+        $this->load->model('tank_auth/users');
+        $this->load->helper('security');
+        $this->load->model('web_services_model');
+        
+    }
+
+    function index() {
+        exit('No direct script access allowed');
+    }
+    
+    function user_login(){
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        if ($this->input->get()) {
+            $data['login_by_username'] = ($this->config->item('login_by_username', 'tank_auth') AND
+					$this->config->item('use_username', 'tank_auth'));
+            $data['login_by_email'] = $this->config->item('login_by_email', 'tank_auth');
+            $username = $this->input->get('username');
+            $pass = $this->input->get('pass');
+            $remember == $this->input->get('remember');
+            
+                $user = $this->web_services_model->get_user($username);
+                //var_dump($user->activated);die;
+                if ($remember) {
+                        $this->tank_auth->create_autologin($user->id);
+                }
+                if ($user->activated == 2) {							// fail - not activated
+                    $res = array("status" => FALSE, "message" => "Your account is not activated.", "data" => "");
+                    echo json_encode($res);
+                    die();
+                }
+                     
+            if ($this->tank_auth->login($username,$pass,$remember,$data['login_by_username'],$data['login_by_email'])){
+                
+                $res = array("status" => TRUE, "message" => "You have been successfully logged In.", "data" => $user);
+                echo json_encode($res);
+                die();
+            }
+			else
+			{
+				$res = array("status" => TRUE, "message" => "Error in Login", "data" => "");
+			}
+        }
+        echo json_encode($res);
+        die();
+    }
+
+    function user_register() {
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        if ($this->input->get()) {
+            $username = $this->input->get('username');
+            $profile = $this->input->get('profile');
+            $email = $this->input->get('email');
+            $phone = $this->input->get('phone');
+            $pass = $this->input->get('pass');
+           
+            /*if (!$this->tank_auth->is_username_available($username)) {
+               $res['message'] = $this->lang->line('auth_username_in_use');
+            }else*/
+            if (!$this->tank_auth->is_email_available($email)) {
+               $res['message'] = $this->lang->line('auth_email_in_use');
+            }else {
+                        
+                $data = array(
+                    'username' => $username,
+                    'email' => $email,
+                    'image' => $profile,
+                    'phone' => $phone,
+                    'password' => $pass,
+                );
+               // var_dump($data);die;
+                if ($this->tank_auth->create_user($data)) {
+                    $res = array("status" => TRUE, "message" => "You have successfully registered.", "data" => $data);
+                    return json_encode($res);
+                    
+                }
+            }    
+            
+        }
+        echo json_encode($res);
+        die();
+    }
+	
+	
+	function update_userprofile() {
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        if ($this->input->get()) {
+			$userid = $this->input->get('userid');
+			$username = $this->input->get('username');
+            $profile = $this->input->get('profile');
+            $email = $this->input->get('email');
+            $phone = $this->input->get('phone');
+           
+            /*if (!$this->tank_auth->is_username_available($username)) {
+               $res['message'] = $this->lang->line('auth_username_in_use');
+            }else*/
+                        
+                $data = array(
+                    'username' => $username,
+                    'email' => $email,
+                    'image' => $profile,
+                    'phone' => $phone,
+                );
+               // var_dump($data);die;
+                if ($this->web_services_model->update_user_profile($data,$userid)) {
+					
+					$userdata = $this->web_services_model->get_user_data($userid);
+					$res = array("status" => TRUE, "message" => "Your details successfully updated.", "data" => $userdata);
+                    
+                }
+				else
+				{
+					$res = array("status" => TRUE, "message" => "Error in update.", "data" => '');
+				}
+            
+        }
+        echo json_encode($res);
+        die();
+    }
+
+    
+    function get_flex_list(){
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        $data = $this->web_services_model->get_flex_list();
+        //$data['path'] = '';
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "","data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+
+    function get_userflex_join_list(){
+		$userid=$this->input->get('userid');
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        $data = $this->web_services_model->get_userflex_join_list($userid);
+        //$data['path'] = '';
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "","data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+
+    function get_userflex_list(){
+		$userid=$this->input->get('userid');
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        $data = $this->web_services_model->get_userflex_list($userid);
+        //$data['path'] = '';
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "","data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+
+
+    function get_flex_comments(){
+        $flexid = $this->input->get('flexid');
+        $res = array("status" => FALSE, "message" => "No Comments Avilable for this Flex.", "data" => "");
+        $data = $this->web_services_model->get_flex_comments($flexid);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+    function follow_user(){
+        $uid = $this->input->get('userid');
+        $fid = $this->input->get('followerid');
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        $follow_data = array(
+                    'UserID' => $uid,
+                    'FollowersID' => $fid,
+                    'CreatedBy' => $fid,
+                    'CreatedOn' => date("Y-m-d H:i:s"),
+                );
+        $data = $this->web_services_model->insert_follow_user($follow_data);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "You have succesfully Followed.", "data" => $data);
+        }else{
+            $res = array("status" => TRUE, "message" => "You have succesfully Unfollowed.", "data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+    function create_flex_api(){
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        
+        if ($this->input->get()){ 
+            $FlexUserID = $this->tank_auth->get_user_id();
+            $flex_name = $this->input->get('flex_name');
+            $flex_cat = $this->input->get('flex_cat');
+            $flex_desc = $this->input->get('flex_desc');
+            $flex_image = $this->input->get('flex_image');
+            $amount_type = $this->input->get('amount_type');
+            $amount = $this->input->get('amount');
+            $maxqty = $this->input->get('maxqty');
+            $goalqty = $this->input->get('goalqty');
+            $flex_type = $this->input->get('flex_type');
+            $ischarged = $this->input->get('ischarged');
+            $ispublished = $this->input->get('ispublished');
+            $published_date = date('Y-m-d',strtotime($this->input->get('published_date')));
+            $end_on = date('Y-m-d',strtotime($this->input->get('end_on')));
+                    
+            
+            if($flex_image == ''){
+                $res = array("status" => FALSE, "message" => "Flex Banner required !");
+            }else if($flex_name == ''){
+                $res = array("status" => FALSE, "message" => "FlexName required !");
+            }else if($flex_desc == ''){
+                $res = array("status" => FALSE, "message" => "Flex Description required !");
+            }else if($flex_cat == ''){
+                $res = array("status" => FALSE, "message" => "Flex Type required !");
+            }else if($amount_type == ''){
+                $res = array("status" => FALSE, "message" => "Amount Type required !");
+            }else if($amount_type != 1 && $amount == ''){
+                $res = array("status" => FALSE, "message" => "Flex Amount required !");
+            }else if($maxqty == ''){
+                $res = array("status" => FALSE, "message" => "Maximum Quantity Available required !");
+            }else if($end_on == ''){
+                $res = array("status" => FALSE, "message" => "Flex End Date required !");
+            }else{
+                $flex_data = array(
+                    "FlexUserID" => $FlexUserID,
+                    "FlexName" => $flex_name,
+                    "FlexCat" => $flex_cat,
+                    "FlexDesc" => $flex_desc,
+                    "FlexImageURL" => $flex_image,
+                    "AmountType" => $amount_type,
+                    "Amount" => $amount,
+                    "MaxQty" => $maxqty,
+                    "GoalQty" => $goalqty,
+                    "FlexType" => $flex_type,
+                    "isCharged" => $ischarged,
+                    "isPublished" => $ispublished,
+                    "PublishedDate" => $published_date,
+                    "EndsOn" => $end_on,
+                    "CreatedOn" => date("Y-m-d H:i:s"),
+                    "CreatedBy" => $this->tank_auth->get_user_id(),
+                );   
+                if($id = $this->web_services_model->create_flex_api($flex_data)){
+                    $res = array("status" => TRUE, "message" => "Flex Detail Saved Succesfully.", "data" => $id);
+                    return true;
+                }else{
+                   $res = array("status" => TRUE, "message" => "There was an unknown error that occurred. Flex Detail not Saved Succesfully.");
+                }
+            }
+        echo json_encode($res);
+        die();
+        
+        }
+    }
+    
+   function get_notification()
+   {
+        $userid = $this->input->get('userid');
+		$res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");        
+        $data = $this->web_services_model->get_notification($userid);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+
+	
+	
+	function my_following(){
+        $id = $this->input->get('userid');
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");        
+        $data = $this->web_services_model->get_my_followig($id);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+    function user_details(){
+        $id = $this->input->get('flexuserid');
+        $uid = $this->input->get('myid');
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");        
+        $data = $this->web_services_model->get_userdtl($id,$uid);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+    function unfollow_user(){
+        $uid = $this->input->get('userid');
+        $id = $this->input->get('myid');
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        
+        $data = $this->web_services_model->delunfollow_user($uid,$id);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "You have succesfully Unfollowed.", "data" => $data);
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+    function join_list(){
+        $fid = $this->input->get('flexid');
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        
+        $data = $this->web_services_model->join_user_list($fid);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $data);
+        }else{
+            $res = array("status" => TRUE, "message" => "No Join User Found.", "data" => '');
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+    function invitee_list(){
+        $fid = $this->input->get('flexid');
+        
+        $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        
+        $data = $this->web_services_model->invitee_user_list($fid);
+        if (!empty($data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $data);
+        }else{
+            $res = array("status" => TRUE, "message" => "No Invited User Found.", "data" => '');
+        }
+        echo json_encode($res);
+        die();
+    }
+    
+   
+    function response($res)
+    {
+        echo json_encode($res);
+    }
+    
+    function add_flex_comment(){
+        $fid = $this->input->get('flexid');
+        $uid = $this->input->get('userid');
+        $comment = $this->input->get('comment');
+        
+        $date = date("Y-m-d H:i:s");
+        
+        $comment_data = array(
+            'UserID' => $uid,
+            'FlexID' => $fid,
+            'Comment' => $comment,
+            'CommentDate' => $date,
+            'CreatedBy' => $fid,
+            'CreatedOn' => $date
+        );                    
+        
+        if ($id=$this->web_services_model->flex_user_comment($comment_data)) {
+            $res = array("status" => TRUE, "message" => "", "data" => $id);
+        }
+        else
+        {
+            $res = array("status" => FALSE, "message" => "Incorrect Data", "data" => "");
+        }
+        
+       echo json_encode($res);
+       die;
+    }
+	
+}

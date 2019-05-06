@@ -1,0 +1,303 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Home extends CI_Controller {
+
+    function __construct() {
+        parent::__construct();
+
+        $this->load->helper('url');
+        $this->load->library('tank_auth');
+        $this->load->model('home_model');
+        $this->load->model('flex_model');
+    }
+
+    function index() {
+        if (!$this->tank_auth->is_logged_in()) {
+                //redirect('/auth/login/');
+            $data['page_title'] = 'HOME';
+            $data['main_content'] = 'home/home';
+            $this->load->view('main_content', $data);
+        } else {
+            $uid = $this->tank_auth->get_user_id();
+            $flex = $this->home_model->get_flex($uid);
+            $payment = $this->home_model->get_ACdtl($uid);
+            $ispay = $this->home_model->get_ispay($uid);
+            
+            //var_dump($ispay);die;
+            if($ispay == 1){
+                $data['skip'] = 'yes';
+            }else{
+                $data['skip'] = 'no';
+            }
+            if($payment == 1){
+                $data['pay_dtl'] = 'yes';
+                //$this->session->set_userdata('skip','yes');
+            }else{
+                $data['pay_dtl'] = 'no';
+            }
+            /*if ($this->session->userdata('skip') != ''){
+                $data['skip'] = 'yes';
+            }else{
+                $data['skip'] = 'no';
+            } */
+            //$this->sessions();   
+            $this->home_model->set_show_pay($uid);
+            $data["extra_js"] = array('homepage');
+            $data["flex_info"] = $flex; 
+            $data['page_title'] = 'All Flexes';
+            $data['main_content'] = 'flex/flex_list';
+            $this->load->view('main_content', $data);
+        }
+    }
+    
+    function sessions(){
+        $this->session->set_userdata('skip','yes');
+    }
+    
+    function add_paymentdtl(){
+        if($this->input->post()){
+            $date = date("Y-m-d H:i:s");
+            $post_data = array(
+                "UserID" => $this->tank_auth->get_user_id(),
+                "PayType" => $this->input->post('amount_type'),
+                "CardNo" => $this->input->post('card_no'),
+                "ExpiryMonth" => date('m',strtotime($this->input->post('ex_date'))),
+                "ExpiryYear" => date('Y',strtotime($this->input->post('ex_date'))),
+                "isDefault" => $this->input->post('isdefault'),
+                "CreatedOn" => $date,
+                "CreatedBy" => $this->tank_auth->get_user_id(),
+                "ModifiedOn" => $date,
+                "ModifiedBy" => $this->tank_auth->get_user_id(),
+            );  
+            //var_dump($post_data);die;
+            //$this->home_model->add_payment_dtl($post_data);
+            if ($this->home_model->add_payment_dtl($post_data)) {
+                
+                $this->session->set_flashdata('success_msg', 'Payment Detail Saved Succesfully.');
+                $response = array("status" => "ok", "heading" => "Saved successfully...", "message" => "Payment Detail Saved Succesfully.");
+            } else {
+                $response = array("status" => "error", "heading" => "Not Saved successfully...", "message" => "Payment Detail Not Saved Succesfully.");
+            }
+             echo json_encode($response);
+            die;    
+        }        
+    }
+    
+    function create_flex(){
+        if (!$this->tank_auth->is_logged_in()) {
+            redirect('/auth/login/');
+        }else{    
+            $this->home_model->clear_temp($this->tank_auth->get_user_id());
+            $que = $this->flex_model->get_question($this->tank_auth->get_user_id());
+            //var_dump($que);die;
+            $data["extra_js"] = array('flexmst');
+            $data['page_title'] = 'Create Flex';
+            $data['que_info']= $que;
+            $data['main_content'] = 'flex/create_flex';
+            $this->load->view('main_content', $data);
+        }    
+    }
+    function flexbanner()
+    {
+        //var_dump($this->input->post());
+        $this->load->helper('profile');
+        $post = isset($_POST) ? $_POST: array();
+	 
+	 switch($post['action']) {
+	  case 'save' :
+		saveAvatarTmp();
+	  break;
+	  default:
+		changeAvatar();
+		
+	 }
+    }
+    function about(){
+        $data['page_title'] = 'About Us';
+        $data['main_content'] = 'home/aboutpage';
+        $this->load->view('main_content', $data);
+    }
+    
+    function privacy(){
+        $data['page_title'] = 'Privacy Policy';
+        $data['main_content'] = 'home/privacypage';
+        $this->load->view('main_content', $data);
+    }
+    
+    function terms_conditions(){
+        $data['page_title'] = 'Terms & Conditions';
+        $data['main_content'] = 'home/termpage';
+        $this->load->view('main_content', $data);
+    }
+    
+    function contact(){
+        $data['page_title'] = 'Contact Us';
+        $data['main_content'] = 'home/contactpage';
+        $this->load->view('main_content', $data);
+    }
+    
+    function flex_list(){
+        if (!$this->tank_auth->is_logged_in()) {
+            redirect('/auth/login/');
+        }else{
+            $uid = $this->tank_auth->get_user_id();
+            $flex = $this->home_model->get_flex($uid);
+            $data["flex_info"] = $flex; 
+            $data['page_title'] = 'All Flexes';
+            $data['main_content'] = 'flex/flex_list';
+            $this->load->view('main_content', $data);
+        }    
+    }
+    
+    function submit_form() {
+        //var_dump($this->input->post());die;  
+        if ($this->input->post()) {
+            $data["extra_js"] = array('flexmst');
+            $response = array("status" => "error", "heading" => "Unknown Error", "message" => "There was an unknown error that occurred. You will need to refresh the page to continue working.");
+            $error_element = error_elements();
+           
+            $this->form_validation
+                    ->set_rules('flex_name', 'Flex Name', 'required')
+                    ->set_rules('flex_cat', 'Flex Type', 'required')
+                    ->set_rules('flex_desc', 'Flex Description', 'required')
+                    ->set_rules('amount_type', 'Amount Type', 'required')
+                    //->set_rules('amount', 'Amount', 'required')
+                    //->set_rules('maxqty', 'MaxQty', 'required|numeric')
+                    //->set_rules('goalqty', 'GoalQty', 'required|numeric')
+                    //->set_rules('published_date', 'PublishedDate', 'required')
+                    ->set_rules('end_on', 'Flex end date', 'required')
+                    ->set_error_delimiters($error_element[0], $error_element[1]);
+                    $date = date("Y-m-d H:i:s");
+             if($this->input->post('amount_type') != 1){
+                 $this->form_validation->set_rules('amount', 'Amount', 'required');
+             }
+             if($this->input->post('maxqty') == ''){
+                 $maxqty = 99999;
+             }else{
+                 $maxqty = $this->input->post('maxqty');
+             }
+            if ($this->form_validation->run()) {
+                $post_data = array(
+                    "FlexUserID" => $this->tank_auth->get_user_id(),
+                    "FlexName" => $this->input->post('flex_name'),
+                    "FlexCat" => $this->input->post('flex_cat'),
+                    "FlexDesc" => $this->input->post('flex_desc'),
+                    //"FlexImageURL" => '1',//$this->input->post('flex_image'),
+                    "AmountType" => $this->input->post('amount_type'),
+                    "Amount" => $this->input->post('amount'),
+                    "MaxQty" => $maxqty,
+                    "GoalQty" => $this->input->post('goalqty'),
+                    "FlexType" => $this->input->post('flex_type'),
+                    "isCharged" => $this->input->post('ischarged'),
+                    "isPublished" => 1,
+                    "Status" => $this->input->post('status'),
+                    "PublishedDate" => $date,
+                    "EndsOn" => date('Y-m-d',strtotime($this->input->post('end_on'))),
+                    "CreatedOn" => $date,
+                    "CreatedBy" => $this->tank_auth->get_user_id(),
+                    "ModifiedOn" => $date,
+                    "ModifiedBy" => $this->tank_auth->get_user_id(),
+                    
+                );
+                
+                $config['upload_path'] = FLEX_IMG_PATH;
+                $config['allowed_types'] = 'gif|jpg|png';
+//                $config['min_width'] = 1000;
+//                $config['min_height'] = 250;
+//                $config['max_width'] = 1300;
+//                $config['max_height'] = 600;
+                $config['max_size'] = 1024 * 10;
+                $config['encrypt_name'] = TRUE;
+
+                $this->load->library('upload', $config);
+                $flex_image = "";
+                
+                if (isset($_FILES["flex_image"]["name"]) && $_FILES["flex_image"]["name"] != "") {
+                    
+                    $tmpName = $_FILES['flex_image']['tmp_name'];
+                    list($width, $height, $type, $attr) = getimagesize($tmpName);
+                    if(($width>=1000 && $width<=1300) || ($height>=275 && $height<=500))
+                    {
+                        
+                        if ($this->upload->do_upload('flex_image')) {
+                            $upload_data = $this->upload->data();
+                            $flex_image = $upload_data["file_name"];
+                            $post_data['FlexImageURL'] = $flex_image;
+                            if(isset($flex_info))
+                            {
+                                if ($flex_info->FlexImageURL && $flex_info->FlexImageURL != '') {
+                                    if ($file_path != "" && file_exists($file_path)):
+                                    $file_path =  FLEX_IMG_PATH . $user->FlexImageURL;
+                                            unlink($file_path);
+                                    endif;
+                                }
+                            }
+                        } else {
+                            $response['heading'] = 'Upload File Not Valid !';
+                            $response['message'] = $this->upload->display_errors();
+                            echo json_encode($response);
+                            die;
+                        }
+                    } else {
+                        $response['heading'] = 'Upload File Not Valid !';
+                        $response['message'] = 'exceeded image dimension limits. (1180 * 320)';
+                        echo json_encode($response);
+                        die;
+                    }
+                }   
+               // var_dump($post_data);die;
+                if ($id = $this->home_model->add_flex($post_data)) {
+                    
+                    $this->flex_model->add_question($id,$this->tank_auth->get_user_id());
+                    
+                    $this->session->set_flashdata('success_msg', 'Flex Detail Saved Succesfully.');
+                    $response = array("status" => "ok", "heading" => "Saved successfully...", "message" => "You have Successfully created your Flex.","id"=>$id);
+                } else {
+                    $response = array("status" => "error", "heading" => "Not Saved successfully...", "message" => "Flex Detail Not Saved Succesfully.");
+                }
+            } else {
+                $errors = $this->form_validation->error_array();
+                $this->session->set_flashdata('error_msg', 'There was an unknown error that occurred. You will need to fill all the fileds.');
+                //redirect('home/create_flex/');
+                $response['error'] = $errors;
+            }
+            echo json_encode($response);
+            die;
+        }
+    }
+    
+    
+    function notification(){
+        if (!$this->tank_auth->is_logged_in()) {
+                redirect('/auth/login/');
+        } else {
+            $uid = $this->tank_auth->get_user_id();
+            $data["extra_js"] = array('notification');
+            $data['page_title'] = 'Notification';
+            $data['main_content'] = 'home/notification';
+            $data['not_info'] = $this->home_model->get_nofification($uid);
+            $this->load->view('main_content', $data);
+        }
+    }
+    
+    function get_notification_cnt(){
+        $uid = $this->tank_auth->get_user_id();
+        
+        $cnt = $this->home_model->get_noti_cnt($uid);
+        $response = array("cnt" => $cnt);
+        echo json_encode($response);
+        die;
+    } 
+    
+    function update_notification(){
+        $uid = $this->tank_auth->get_user_id();
+        if($this->home_model->update_noti($uid)){
+            $response = array("status" => "ok");
+        }
+        echo json_encode($response);
+        die;
+    }
+}

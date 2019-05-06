@@ -1,0 +1,216 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Web_services_model extends CI_Model {
+
+    function __construct() {
+        parent::__construct();
+    }
+    
+    function get_user($username) {
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+        $this->db->select('*, CONCAT("'.$user_url.'", image) as UserImage');    
+        $where = "username ='$username' OR email ='$username'";
+        $this->db->where($where);
+        $query = $this->db->get(TBL_USERS);
+        
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        }
+        return NULL;
+    }
+    function get_user_data($userid) {
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+        $this->db->select('*, CONCAT("'.$user_url.'", image) as UserImage');    
+        $this->db->where('id', $userid);
+        $query = $this->db->get(TBL_USERS);
+        
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        }
+        return NULL;
+    }
+
+    function get_notification($userid) {
+        $this->db->select('*');    
+		$this->db->where('UserID', $userid);
+        $query = $this->db->get(TBL_NOTIFICATION);
+        
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+    }
+
+    function get_flex_list(){
+        
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+        $flex_url = IMG_URL.FLEX_IMG_VIEW_PATH;
+        $this->db->select('f.*, u.username, CONCAT("'.$user_url.'", u.image) as UserImage, (SELECT IFNULL(SUM(`j`.`Qty`),0) as Joiner from '.TBL_USER_FLEXJOIN.' j where j.FlexID = f.FlexID) As Joiner, (SELECT IFNULL(SUM(`j`.`FlexAmt`),0) as Joiner from '.TBL_USER_FLEXJOIN.' j where j.FlexID = f.FlexID) As TotalAmount,(SELECT COUNT(`c`.`CommentID`) from '.TBL_USER_COMMENTS.' c where c.FlexID = f.FlexID) As Comments,(SELECT COUNT(`i`.`FlexInviteeID`) from '.TBL_FLEX_INVITEES.' i where i.FlexID = f.FlexID) As Invitee, (SELECT CONCAT("'.$flex_url.'",fi.FlexImageURL) as FlexImage from '.TBL_FLEXMST.' fi where fi.FlexID = f.FlexID) As FlexImage');
+        $this->db->join(TBL_USERS.' u', 'f.FlexUserID = u.id');
+        $this->db->where('f.FlexType', 1);
+        $this->db->order_by("f.CreatedOn", "asc");
+        
+        $query = $this->db->get(TBL_FLEXMST.' f');
+        if ($query->num_rows() > 0) {
+            
+           /* if($query->row()->FlexImageURL != '')
+            {
+                $query->row()->FlexImageURL = IMG_URL.FLEX_IMG_VIEW_PATH.$query->row()->FlexImageURL;
+            }
+            if($query->row()->UserImage != '')
+            {
+                $query->row()->UserImage = IMG_URL.USER_IMG_VIEW_PATH.$query->row()->UserImage;
+            }
+            
+            /*else
+            {
+                return 0;
+            }
+            if($query->row()->Joiner>0)
+            {
+                return $query->result()->Joiner;
+            }
+            else
+            {
+                return 0;
+            }*/
+            // IMG_URL.FLEX_IMG_VIEW_PATH;
+            return $query->result();
+        }
+        return NULL;
+    }
+    
+    function get_flex_comments($id){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+        $this->db->select('c.*,u.username,CONCAT("'.$user_url.'", u.image) as UserImage');
+        $this->db->join(TBL_USERS.' u', 'c.UserID = u.id');
+        $this->db->where('c.FlexID', $id);
+        $query = $this->db->get(TBL_USER_COMMENTS.' c');
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+        
+    }
+    
+    function insert_follow_user($data){
+        $this->db->select('UserFollowersID as Id');
+        $this->db->where('UserID', $data['UserID']);
+        $this->db->where('FollowersID', $data['FollowersID']);
+        $query = $this->db->get(TBL_USER_FOLLOWERS);
+        if ($query->num_rows() > 0) {
+            foreach($query->result() as $row){
+                $this->db->where('UserFollowersID', $row->Id);
+                $this->db->delete(TBL_USER_FOLLOWERS);
+                return ;
+            }
+        }else{
+            $this->db->insert(TBL_USER_FOLLOWERS, $data);
+            return $this->db->insert_id();
+        }    
+    }
+    
+    function create_flex_api($data){
+         $this->db->insert(TBL_FLEXMST, $data);
+        return $this->db->insert_id();
+    }
+    
+    function get_my_followig($id){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+         $this->db->select('f.*, u.username,CONCAT("'.$user_url.'", u.image) as UserImage');
+        $this->db->join(TBL_USERS.' u', 'f.UserID = u.id');
+        $this->db->where('f.FollowersID', $id);
+        $query = $this->db->get(TBL_USER_FOLLOWERS.' f');
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+    }
+    
+    function get_userdtl($id,$uid){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+        $this->db->select('u.id,u.username,u.email,u.phone,(SELECT UserFollowersID from '.TBL_USER_FOLLOWERS.' where UserID = '.$id.' and FollowersID = '.$uid.') As IsFollow,(SELECT Count(UserID) from '.TBL_USER_FOLLOWERS.' where UserID = '.$id.') as Following,(SELECT Count(FollowersID) from '.TBL_USER_FOLLOWERS.' where FollowersID = '.$id.') as Followers, (SELECT count(FlexID) from '.TBL_FLEXMST.' where FlexUserID = '.$id.') as CreatFlex,(SELECT CONCAT("'.$user_url.'",ui.image) as UserImage from '.TBL_USERS.' ui where ui.id = u.id) As UserImage');
+        $this->db->where('u.id', $id);
+        $query = $this->db->get(TBL_USERS.' u');
+        if ($query->num_rows() > 0) {
+            if($query->row()->IsFollow != '')
+            {
+                $query->row()->IsFollow = "1";
+            }else{
+                $query->row()->IsFollow = "0";
+            }
+            return $query->result();
+        }
+        return NULL;
+    }
+    
+    function join_user_list($fid){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+         $this->db->select('j.*, u.username,CONCAT("'.$user_url.'", u.image) as UserImage');
+        $this->db->join(TBL_USERS.' u', 'j.UserID = u.id');
+        $this->db->where('j.FlexID', $fid);
+        $query = $this->db->get(TBL_USER_FLEXJOIN.' j');
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+    }
+	
+    function get_userflex_join_list($userid){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+		$flex_url = IMG_URL.FLEX_IMG_VIEW_PATH;
+        $this->db->select('j.*, u.username,CONCAT("'.$user_url.'", u.image) as UserImage,f.FlexName,CONCAT("'.$flex_url.'", f.FlexImageURL) as FlexImage');
+        $this->db->join(TBL_USERS.' u', 'j.UserID = u.id');
+		$this->db->join(TBL_FLEXMST.' f', 'f.FlexID = j.FlexID');
+        $this->db->where('j.UserID', $userid);
+        $query = $this->db->get(TBL_USER_FLEXJOIN.' j');
+		if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+    }
+	
+
+    function get_userflex_list($userid){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+		$flex_url = IMG_URL.FLEX_IMG_VIEW_PATH;
+         $this->db->select('f.*,CONCAT("'.$flex_url.'", f.FlexImageURL) as FlexImage,u.*,,(SELECT SUM(`j`.`Qty`) as Joiner from '.TBL_USER_FLEXJOIN.' j where j.FlexID = f.FlexID) As Joiner,(SELECT SUM(`j`.`FlexAmt`) as Joiner from '.TBL_USER_FLEXJOIN.' j where j.FlexID = f.FlexID) As Amount,(SELECT COUNT(`c`.`CommentID`) from '.TBL_USER_COMMENTS.' c where c.FlexID = f.FlexID) As Comments');
+        $this->db->join(TBL_USERS.' u', 'f.FlexUserID = u.id'); 	
+        $this->db->where('f.FlexUserID', $userid);
+		$this->db->order_by("f.CreatedOn", "asc");
+        $query = $this->db->get(TBL_FLEXMST.' f');
+		if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+    }
+
+
+    function invitee_user_list($fid){
+        $user_url = IMG_URL.USER_IMG_VIEW_PATH;
+		
+        $this->db->select('i.*, u.username as InviteBy,CONCAT("'.$user_url.'", u.image) as InviteByImage, ui.username as Invitee,CONCAT("'.$user_url.'", ui.image) as InviteeImage');
+        $this->db->join(TBL_USERS.' u', 'i.InviteByID = u.id');
+        $this->db->join(TBL_USERS.' ui', 'i.InviteeID = ui.id');
+        $this->db->where('i.FlexID', $fid);
+        $query = $this->db->get(TBL_FLEX_INVITEES.' i');
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return NULL;
+    }
+    
+    function flex_user_comment($data){
+        $this->db->insert(TBL_USER_COMMENTS, $data);
+        return $this->db->insert_id();
+    }
+	function update_user_profile($data, $id) {
+        $this->db->where('id', $id);
+        $this->db->update(TBL_USERS, $data);
+        return $id;
+    }	
+
+}    

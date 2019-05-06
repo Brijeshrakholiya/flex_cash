@@ -1,0 +1,317 @@
+<?php $form_attr = array('class' => 'flex_frm', 'id' => 'add_flex_frm', 'name' => 'add_flex_frm');
+
+?>
+<section id="flexform_section">
+      <div class="content">
+          
+        <div class="flexform_block">
+          <div class="container">
+              <?php  //$this->load->view("includes/messages");?>
+            <div class="flexform_box">
+              <?php echo form_open_multipart(base_url('index.php/home/submit_form'), $form_attr); ?>
+                <div class="form-group">
+                  <div class="pro_banner">
+                  <img src="<?php echo base_url(); ?>assets/images/banneradd.jpg" onclick='return OpenFileBrowser(event)' id="img_back" alt="" style="cursor:pointer;">
+                  <input type="file" name="flex_image" id="fileUpload" class="hidden" />
+                </div>
+                    <p style="color: #f009;font-size: 12px;text-align: center;">Flex banner dimension ( 1180px * 320px ).</p>
+                </div>
+                <div class="form-group">
+                    <input type="name" class="form-control" name="flex_name" id="flex_name" placeholder="Flex Name" id="name">
+                </div>
+                <div class="form-group">
+                  <textarea class="form-control" name="flex_desc" placeholder="Flex Description" id="flex_desc" rows="5"></textarea>
+                </div>
+                 <div class="form-group">
+                  <select class="form-control" id="flex_cat" name="flex_cat" style="width:100%">
+                                 <option value="0"> Flex Type </option>
+                                 <option value="1" >Sell</option>
+                                <option value="2">Collect</option>
+                            </select>
+                </div>
+                <div class="row">
+                  <div class="col-md-5">
+                    <div class="form-group no-margin">
+                      <select class="form-control" id="amount_type" name="amount_type" style="width:100%">
+                                 <option value="0">Amount Type</option>
+                                 <option value="1">Any</option>
+                                <option value="2">Exact</option>
+                                <option value="3">Atleast</option>
+                            </select>
+                    </div>
+                  </div>
+                  <div class="col-md-7">
+                      <div class="form-group no-margin">
+                        <input class="form-control amount" id="amount" placeholder="Amount" name="amount" >
+                      </div>
+                  </div>
+                </div>
+                <?php /*
+                <div class="form-group">
+                  <input type="text" class="form-control date" id="published_date" placeholder="Enter Published Date" name="published_date" tabindex="3">
+                </div>
+                 */ ?>
+                <div id="sell_type" style="display:none;">
+                <div class="form-group">
+                  <input class="form-control" id="maxqty" placeholder="Maximum Quantity Available (Optional)" name="maxqty" >
+                </div>
+                <div class="form-group">
+                  <input class="form-control" id="goalqty" placeholder="Goal Quantity to Sell (Optional)" name="goalqty" >
+                </div>
+                </div>
+                <div class="checkbox">
+                  <label><input id="ischarged" name="ischarged" type="checkbox" value="1" > Do not charge contributors until goal is reached</label>
+                </div>
+                <p>Add Request Information</p>
+                <span>
+                <a href="javascript:;" class="btn btn-default add_question">Click to Add </a>
+                
+                </span>
+                <div class="row">
+                  <div class="col-md-8">
+                      <div class="form-group no-margin">
+                        <div class="row">
+                        <div class="input-append success date right col-md-12">
+                            <input type="text" class="form-control date" id="end_on" placeholder="Flex End Date" name="end_on" value="" tabindex="3">
+
+                        </div>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group no-margin">
+                     <select class="form-control word" id="flex_type" name="flex_type" style="width:100%">
+                         <option value="1">Public</option>
+                         <option value="2">Private</option>
+                     </select>
+                    </div>  
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-default orange">Publish Flex</button>
+              <?php echo form_close(); ?> 
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+<div class="modal fade bs-example-modal-md" id="custom" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" >
+        <div class="modal-content" id="timetable_model_main">
+
+            <div class="modal-header">
+                
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                <h4><span class="semi-bold" id="myModalLabel2">Add Question Details</span></h4>
+            </div>
+            <div class="grid simple horizontal orenge" id="timetable-slot">
+                <div class="grid-body" >
+                
+                    <table class="table table-responsive field_wrapper" id="model_content_area">
+                        <form id="myform">
+                            <div class="row">
+                                <div class="checkbox">
+                                    <label><input id="qtype" name="qtype" type="checkbox" value="1" > Is Multiple</label>
+                                </div>
+                                <div class="checkbox pull-right">
+                                   <?php /* <label><input id="isr" name="isr" type="checkbox" value="1" > Is Required</label>*/?><i> Is Required</i>
+                                    <label class="switch">
+  <input id="isr" name="isr" value="1" type="checkbox">  
+  <span class="slider round"></span></label>
+                                </div>
+                            </div>    
+                            <div class="row">
+                            <div class="col-md-12">   
+                                <input type="text" class="form-control" name="question" id="question" required placeholder="Flex Question"></div> 
+<!--                            <div class="col-md-3">
+                                <input type="text" class="form-control" name="qord" id="qord" placeholder="Question Order"></div>
+                            </div>-->
+                        <div class="clearfix"></div>
+                        <tbody class="mult_opt" style="display:none;">
+                            <tr>
+                                <td style="width:100% !important;"><input type="text" class="form-control" name="option[]" id="option[]" placeholder="Option"></td>
+<!--                                <td style="width:20% !important;"><input type="text" class="form-control" name="order[]" id="order[]" placeholder="Order"></td>-->
+                                <td style="width:10% !important; alignment-adjust: central;"><a  href="javascript:;" class="btn btn-warning btn-xs btn-equal btn-mini add_button"><i class="fa fa-plus"></i></a></td>                      
+                            </tr>
+                        </tbody>
+                        </form>
+                    </table>
+                
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="modal-footer" id="">
+                <table class="table table-responsive table-bordered" id="que_content_area">
+                        
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="reset" class="btn btn-warning submitBtn" onclick="submitQuestionForm()">Add</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<script>
+    
+    function OpenFileBrowser(elem) {
+        $('#fileUpload').click();
+    }
+    
+    function filePreview(input) {
+       if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#img_back').attr('src', e.target.result);
+        }
+        reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    function del_question(id) {
+        //alert(id);
+        $.ajax({
+            type: 'POST',
+            url: BASEURL +'index.php/flex/del_temp_question',
+            data : {id : id},
+            dataType: 'json',
+            success: function (returnData) {
+                    if (returnData.status == "ok") {
+                    if(returnData.que_info == 0){
+                        $('.add_question').html('Click to Add');
+                    }    
+                    if (typeof returnData.que_info != "undefined") {
+                        var html_data = '';
+                        var cnt = 1;
+                        $.each(returnData.que_info, function (idx,que) {
+                        html_data += 
+                            '<tr>'
+                                +'<td style="width:10% !important;">Q.'+cnt+'</td>'
+                                +'<td style="pull-left;"><label class="pull-left">'+que.Question+'</label>';
+                                        if(que.Qtype == 2){
+                                            var option = que.QOption.split(',');
+                                            html_data += '<table class="table table-responsive">';
+                                            var cnt1 = 1;
+                                            
+                                            $.each(option, function (idx,opt) {
+                                                //html_data += '<tr><td>Opt. '+ cnt1 +'</td><td> '+opt.'</td></tr>';
+                                                html_data += '<tr style="text-align:left;"><td style="width:15%;"> Opt. '+cnt1+'</td><td>'+opt+'</td</tr>';
+                                                cnt1++;
+                                            });
+                                            html_data += '</table>';
+                                        }
+                                    html_data += '</td>'
+                                +'<td style="width:5% !important;"><a  href="javascript:;" style="width:auto;" class="btn btn-danger btn-xs btn-mini del_que" onclick="del_question('+que.QID+')" id='+que.QID+'><i class="fa fa-close"></i></a></td>'
+                            +'</tr>'
+                         cnt++;   
+                        });
+
+                        $('#que_content_area').html(html_data);  
+                    }else{
+                        
+                    }
+                }
+            //consol.log('ok');
+            },
+        });
+    }
+    
+    function submitQuestionForm(){
+        var question = document.getElementById('question');
+        var qord = '';//document.getElementById('qord');
+        var options = document.getElementsByName('option[]');
+        var orders = '';//document.getElementsByName('order[]');
+        
+        var opts = "";
+        var ord = "";
+        var cnt = 0;
+        for (var i=0, n=options.length;i<n;i++) 
+        {
+            if (options[i] != '') 
+            {
+                var j = ",";
+                if(i == n-1){var j='';}
+                opts += options[i].value +j;
+                //ord += orders[i].value +j;
+            }
+            cnt++;
+        }
+        //alert(cnt);
+        if($("#qtype").is(':checked')){
+            var qtype = '2';
+        }else{
+            var qtype = '1';
+        }
+        if($("#isr").is(':checked')){
+            var isr = '1';
+        }else{
+            var isr = '0';
+        }
+        var Error = '';
+        if(question.value == ''){
+            $( "#question" ).focus();
+            Error += "Question Filed is required !.</br>";
+        }
+        if(qtype == '2' && opts == ''){
+            Error += "Option Filed is required !.";
+        }
+        if(qtype == '2' && cnt < 2){
+            Error += "You have to add atlest 2 Option !.";
+        }
+        if(Error != ''){
+            toster_message(Error,"Error !", 'error');
+        }else{ 
+            var que = question.value;
+            var qord = qord.value;
+        
+            $.ajax({
+                type: 'POST',
+                url: BASEURL +'index.php/flex/temp_question',
+                data : {Question : que, Qorder : qord, isRequired : isr, Qtype : qtype, QOption : opts, Oorder : ord},
+                dataType: 'json',
+                success: function (returnData) {
+                        if (returnData.status == "ok") {
+                            $('#question').val('');
+                            $('.add_question').html('Manage Question <span style="color:green;"><i class="fa fa-check"></i></span>');
+                        if (typeof returnData.que_info != "undefined") {
+                            var html_data = '';
+                            var cnt = 1;
+                            
+                            $.each(returnData.que_info, function (idx,que) {
+                            html_data += 
+                                '<tr>'
+                                    +'<td style="width:10% !important;">Q.'+cnt+'</td>'
+                                    +'<td style="pull-left;"><label class="pull-left">'+que.Question+'</label>';
+                                        if(que.Qtype == 2){
+                                            var option = que.QOption.split(',');
+                                            html_data += '<table class="table table-responsive">';
+                                            var cnt1 = 1;
+                                            
+                                            $.each(option, function (idx,opt) {
+                                                //html_data += '<tr><td>Opt. '+ cnt1 +'</td><td> '+opt.'</td></tr>';
+                                                html_data += '<tr style="text-align:left;"><td style="width:15%;"> Opt. '+cnt1+'</td><td>'+opt+'</td</tr>';
+                                                cnt1++;
+                                            });
+                                            html_data += '</table>';
+                                        }
+                                    html_data += '</td>'
+                                    +'<td style="width:5% !important;"><a  href="javascript:;" style="width:auto;" class="btn btn-danger btn-xs btn-mini del_que" onclick="del_question('+que.QID+')" id='+que.QID+'><i class="fa fa-close"></i></a></td>'
+                                +'</tr>'
+                             cnt++;   
+                            });
+                                
+                            $('#que_content_area').html(html_data);  
+                        }
+                    }
+                //consol.log('ok');
+                },
+            });    
+            $(".bs-example-modal-md").modal('hide');
+        }
+        
+        
+    }
+    
+</script>

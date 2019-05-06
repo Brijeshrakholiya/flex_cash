@@ -1,0 +1,22 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class User extends CI_Controller {
+
+    function __construct() {
+        parent::__construct();
+
+        $this->load->helper('url');
+        $this->load->library('tank_auth');
+        $this->load->model('user_model');
+    }
+
+    function index() {
+        $data["extra_js"] = array();
+        $data['page_title'] = 'Profile';
+        $data['main_content'] = 'user/user_profile';
+        $this->load->view('main_content', $data);
+    }
+}   

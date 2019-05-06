@@ -1,0 +1,70 @@
+@charset "utf-8";
+/* CSS Document */
+
+@font-face {
+	font-family: 'Roboto Condensed';
+	src: url('RobotoCondensed-Regular.eot');
+	src: url('RobotoCondensed-Regular.eot?#iefix') format('embedded-opentype'),
+		url('RobotoCondensed-Regular.woff') format('woff'),
+		url('RobotoCondensed-Regular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
+
+@font-face {
+	font-family: 'Open Sans';
+	src: url('OpenSans.eot');
+	src: url('OpenSans.eot?#iefix') format('embedded-opentype'),
+		url('OpenSans.woff') format('woff'),
+		url('OpenSans.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'Roboto';
+	src: url('Roboto-Regular.eot');
+	src: url('Roboto-Regular.eot?#iefix') format('embedded-opentype'),
+		url('Roboto-Regular.woff') format('woff'),
+		url('Roboto-Regular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+    font-family: 'Neuton';
+    src: url('Neuton-Regular.eot');
+    src: url('Neuton-Regular.eot?#iefix') format('embedded-opentype'),
+        url('Neuton-Regular.woff') format('woff'),
+        url('Neuton-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+	font-family: 'Roboto-Light';
+	src: url('Roboto-Light.eot');
+	src: url('Roboto-Light.eot?#iefix') format('embedded-opentype'),
+		url('Roboto-Light.woff') format('woff'),
+		url('Roboto-Light.ttf') format('truetype');
+	font-weight: 300;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Roboto-Bold';
+	src: url('Roboto-Bold.eot');
+	src: url('Roboto-Bold.eot?#iefix') format('embedded-opentype'),
+		url('Roboto-Bold.woff') format('woff'),
+		url('Roboto-Bold.ttf') format('truetype');
+	font-weight: bold;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'Roboto-Medium';
+	src: url('Roboto-Medium.eot');
+	src: url('Roboto-Medium.eot?#iefix') format('embedded-opentype'),
+		url('Roboto-Medium.woff') format('woff'),
+		url('Roboto-Medium.ttf') format('truetype');
+	font-weight: 500;
+	font-style: normal;
+}
+
